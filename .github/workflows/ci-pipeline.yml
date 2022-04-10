@@ -1,4 +1,48 @@
-name: Notes Application CI Pipeline
-# create a CI pipeline based on the assignment specification
-# remember to commit often
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
+name: Node.js CI
+
+on:
+  push:
+    branches: [ master, dev ]
+  pull_request:
+    branches: [ master, dev ]
+
+jobs:
+  docker:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Start containers
+      run: docker-compose -f "docker-compose.yml" up -d --build
+
+    - name: Install node
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+
+    - name: Install dependencies
+      working-directory: ./src
+      run: npm install
+      
+#     - name: Test Lint
+#       working-directory: ./src
+#       run: npm run test-lint
+
+    - name: Unit Testing
+      working-directory: ./src
+      run: npm run test-unit
+      
+      
+    - name: Unit test-integration
+      working-directory: ./src
+      run: npm run test-integration
+      
+    - name: Stop containers
+      if: always()
+      run: docker-compose -f "docker-compose.yml" down
